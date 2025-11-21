@@ -7,6 +7,8 @@ import { Post } from '@/models';
 import { IPost } from '@/types';
 import LikeButton from '@/components/LikeButton';
 
+export const dynamic = 'force-dynamic';
+
 interface PostPageProps {
   params: Promise<{ slug: string }>;
 }

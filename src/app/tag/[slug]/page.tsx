@@ -5,6 +5,8 @@ import dbConnect from '@/lib/mongodb';
 import { Post, Tag } from '@/models';
 import { IPost, ITag } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface TagPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;

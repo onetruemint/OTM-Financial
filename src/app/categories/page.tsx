@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import { Category, Post } from '@/models';
 import { ICategory } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface CategoryWithCount extends ICategory {
   postCount: number;
 }
