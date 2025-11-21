@@ -23,7 +23,20 @@ async function dbConnect(): Promise<typeof mongoose> {
   const MONGODB_URI = process.env.MONGODB_URI;
 
   if (!MONGODB_URI) {
-    throw new Error('Please define the MONGODB_URI environment variable');
+    throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+  }
+
+  // Validate connection string format
+  if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
+    throw new Error('MONGODB_URI must start with mongodb:// or mongodb+srv://');
+  }
+
+  // Check for placeholder hostname
+  if (MONGODB_URI.includes('cluster.mongodb.net') && !MONGODB_URI.match(/cluster\d+\.\w+\.mongodb\.net/)) {
+    throw new Error(
+      'MONGODB_URI contains placeholder hostname. Please replace "cluster.mongodb.net" with your actual MongoDB Atlas cluster hostname (e.g., cluster0.xxxxx.mongodb.net). ' +
+      'Get your connection string from MongoDB Atlas: https://cloud.mongodb.com -> Connect -> Connect your application'
+    );
   }
 
   if (!cached.promise) {
