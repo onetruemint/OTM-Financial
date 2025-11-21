@@ -5,6 +5,8 @@ import { Post, Category } from '@/models';
 import { IPost, ICategory } from '@/types';
 import { ArrowRight } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 async function getLatestPosts(): Promise<IPost[]> {
   await dbConnect();
 

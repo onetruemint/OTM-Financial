@@ -63,13 +63,31 @@ body {
   background: var(--dark-purple);
 }
 
-/* Smooth transitions */
-* {
+/* Smooth transitions - only for interactive elements */
+a, button, [role="button"] {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Selection styling */
 ::selection {
-  background: var(--mint);
-  color: var(--black);
+  background: var(--dark-purple) !important;
+  color: var(--black) !important;
+}
+
+::-moz-selection {
+  background: var(--dark-purple) !important;
+  color: var(--black) !important;
+}
+
+/* Input selection */
+input::selection,
+textarea::selection {
+  background: var(--dark-purple) !important;
+  color: var(--black) !important;
+}
+
+input::-moz-selection,
+textarea::-moz-selection {
+  background: var(--dark-purple) !important;
+  color: var(--black) !important;
 }

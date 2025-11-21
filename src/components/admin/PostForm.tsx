@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { AuthorData, CategoryData, TagData } from '@/lib/data';
+import ImageUpload, { ImageUploadRef } from '@/components/ImageUpload';
 
 interface PostFormProps {
   authors: AuthorData[];
@@ -35,6 +36,7 @@ export default function PostForm({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const imageUploadRef = useRef<ImageUploadRef>(null);
 
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -53,6 +55,20 @@ export default function PostForm({
     setIsLoading(true);
 
     try {
+      // Confirm any pending image upload first
+      let finalFormData = { ...formData };
+      if (imageUploadRef.current) {
+        const uploadResult = await imageUploadRef.current.confirmPending();
+        if (!uploadResult.success) {
+          setError(`Image upload failed: ${uploadResult.error}`);
+          setIsLoading(false);
+          return;
+        }
+        if (uploadResult.url) {
+          finalFormData.featuredImage = uploadResult.url;
+        }
+      }
+
       const url = mode === 'create' ? '/api/posts' : `/api/posts/${slug}`;
       const method = mode === 'create' ? 'POST' : 'PUT';
 
@@ -61,7 +77,7 @@ export default function PostForm({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalFormData),
       });
 
       if (response.ok) {
@@ -152,19 +168,14 @@ export default function PostForm({
           </div>
 
           {/* Featured Image */}
-          <div>
-            <label htmlFor="featuredImage" className="block text-sm font-medium text-black mb-1">
-              Featured Image URL
-            </label>
-            <input
-              type="url"
-              id="featuredImage"
-              value={formData.featuredImage}
-              onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-mint border border-dark-blue/30 focus:border-dark-blue focus:outline-none text-black"
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
+          <ImageUpload
+            ref={imageUploadRef}
+            value={formData.featuredImage}
+            onChange={(url) => setFormData({ ...formData, featuredImage: url })}
+            folder="otm-financial/posts"
+            label="Featured Image"
+            aspectRatio="video"
+          />
 
           {/* Author & Category */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

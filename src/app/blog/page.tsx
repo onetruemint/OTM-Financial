@@ -4,6 +4,8 @@ import dbConnect from '@/lib/mongodb';
 import { Post } from '@/models';
 import { IPost } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface BlogPageProps {
   searchParams: Promise<{ page?: string }>;
 }

@@ -5,6 +5,8 @@ import { Post } from '@/models';
 import { IPost } from '@/types';
 import { Search } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; page?: string }>;
 }

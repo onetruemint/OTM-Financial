@@ -5,6 +5,8 @@ import dbConnect from '@/lib/mongodb';
 import { Post, Category } from '@/models';
 import { IPost, ICategory } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;

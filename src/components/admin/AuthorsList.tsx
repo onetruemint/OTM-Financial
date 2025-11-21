@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, User } from 'lucide-react';
+import Image from 'next/image';
 import type { AuthorData } from '@/lib/data';
+import ImageUpload, { ImageUploadRef } from '@/components/ImageUpload';
 
 interface AuthorsListProps {
   initialAuthors: AuthorData[];
@@ -19,6 +21,7 @@ export default function AuthorsList({ initialAuthors }: AuthorsListProps) {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const imageUploadRef = useRef<ImageUploadRef>(null);
 
   const fetchAuthors = async () => {
     try {
@@ -36,12 +39,26 @@ export default function AuthorsList({ initialAuthors }: AuthorsListProps) {
     setIsSubmitting(true);
 
     try {
+      // Confirm any pending image upload first
+      let finalFormData = { ...formData };
+      if (imageUploadRef.current) {
+        const uploadResult = await imageUploadRef.current.confirmPending();
+        if (!uploadResult.success) {
+          setError(`Image upload failed: ${uploadResult.error}`);
+          setIsSubmitting(false);
+          return;
+        }
+        if (uploadResult.url) {
+          finalFormData.avatar = uploadResult.url;
+        }
+      }
+
       const response = await fetch('/api/authors', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalFormData),
       });
 
       if (response.ok) {
@@ -124,19 +141,14 @@ export default function AuthorsList({ initialAuthors }: AuthorsListProps) {
               />
             </div>
 
-            <div>
-              <label htmlFor="avatar" className="block text-sm font-medium text-black mb-1">
-                Avatar URL
-              </label>
-              <input
-                type="url"
-                id="avatar"
-                value={formData.avatar}
-                onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg bg-white border border-dark-blue/30 focus:border-dark-blue focus:outline-none text-black"
-                placeholder="https://example.com/avatar.jpg"
-              />
-            </div>
+            <ImageUpload
+              ref={imageUploadRef}
+              value={formData.avatar}
+              onChange={(url) => setFormData({ ...formData, avatar: url })}
+              folder="otm-financial/avatars"
+              label="Avatar"
+              aspectRatio="square"
+            />
 
             {error && (
               <div className="bg-red text-black text-sm p-3 rounded-lg">
@@ -170,9 +182,20 @@ export default function AuthorsList({ initialAuthors }: AuthorsListProps) {
           {authors.map((author) => (
             <div key={author._id} className="bg-mint rounded-xl p-4">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-dark-purple flex items-center justify-center">
-                  <User size={20} className="text-black" />
-                </div>
+                {(author as any).avatar ? (
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                    <Image
+                      src={(author as any).avatar}
+                      alt={author.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-dark-purple flex items-center justify-center">
+                    <User size={20} className="text-black" />
+                  </div>
+                )}
                 <div className="flex-1">
                   <h3 className="font-bold text-black">{author.name}</h3>
                   <p className="text-black/70 text-sm">{author.email}</p>
