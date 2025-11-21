@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OneTrueMint Financial - Next.js Blog with MongoDB Atlas
+
+A modern, user-friendly blog platform built with Next.js 15, MongoDB Atlas, and Tailwind CSS.
+
+## Features
+
+- **Public Blog**: Browse posts, search, filter by categories and tags
+- **Like System**: Users can like posts
+- **Admin Dashboard**: Create, edit, and manage posts, categories, tags, and authors
+- **Authentication**: Secure admin login with NextAuth.js
+- **Responsive Design**: Clean, modern UI with custom color palette
+- **SEO Friendly**: Server-side rendering for better search engine optimization
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
+- **Database**: MongoDB Atlas
+- **Authentication**: NextAuth.js v5
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+
+- MongoDB Atlas account (free tier works)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd otm-blog
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   Copy `.env.example` to `.env.local` and update the values:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Update `.env.local`:
+   ```env
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/blog?retryWrites=true&w=majority
+   NEXTAUTH_SECRET=your-secret-key-here
+   NEXTAUTH_URL=http://localhost:3000
+   ADMIN_EMAIL=admin@example.com
+   ADMIN_PASSWORD=your-secure-password
+   ```
+
+   To generate a secure secret:
+   ```bash
+   openssl rand -base64 32
+   ```
+
+4. **Seed the database (optional)**
+
+   This creates sample data to get you started:
+   ```bash
+   npm run seed
+   ```
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   - Blog: http://localhost:3000
+   - Admin: http://localhost:3000/admin
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── admin/              # Admin dashboard pages
+│   ├── api/                # API routes
+│   ├── blog/               # Blog pages
+│   ├── category/           # Category pages
+│   ├── search/             # Search page
+│   └── tag/                # Tag pages
+├── components/             # React components
+│   └── admin/              # Admin-specific components
+├── lib/                    # Utility functions
+├── models/                 # Mongoose models
+└── types/                  # TypeScript types
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Color Palette
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The blog uses a custom pastel color palette:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- White: `#f5f5f5`
+- Mint: `#d5f3ed`
+- Black: `#1e1e1e`
+- Blue: `#d5eaf3`
+- Green: `#d5f3de`
+- Purple: `#edd5f3`
+- Tan: `#f3edd5`
+- Red: `#f3d5db`
 
-## Learn More
+And darker variants for accents.
 
-To learn more about Next.js, take a look at the following resources:
+## Admin Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Go to `/admin/login`
+2. Sign in with the credentials from your `.env.local`
+3. Create authors, categories, and tags first
+4. Then create blog posts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+### Vercel (Recommended)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push your code to GitHub
+2. Import the project in Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Other Platforms
+
+Build the project:
+```bash
+npm run build
+npm start
+```
+
+## License
+
+MIT
