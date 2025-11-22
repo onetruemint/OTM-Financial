@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
+import dbConnect from '@/lib/mongodb';
+import { AdminUser } from '@/models';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -15,41 +16,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const adminPassword = process.env.ADMIN_PASSWORD;
+        try {
+          await dbConnect();
 
-        if (!adminEmail || !adminPassword) {
-          throw new Error('Admin credentials not configured');
-        }
+          // Find user and explicitly select password field
+          const user = await AdminUser.findOne({ email: credentials.email })
+            .select('+password')
+            .exec();
 
-        if (credentials.email === adminEmail) {
-          // Always use bcrypt comparison for security
-          // ADMIN_PASSWORD in env should be a bcrypt hash
-          // Generate with: npx bcryptjs hash "yourpassword"
-          let isValid = false;
-
-          // Check if password is bcrypt hashed (starts with $2)
-          if (adminPassword.startsWith('$2')) {
-            isValid = await bcrypt.compare(credentials.password as string, adminPassword);
-          } else {
-            // Fallback for non-hashed passwords (development only)
-            // Log warning in production
-            if (process.env.NODE_ENV === 'production') {
-              console.warn('WARNING: ADMIN_PASSWORD should be bcrypt hashed in production');
-            }
-            isValid = credentials.password === adminPassword;
+          if (!user) {
+            return null;
           }
 
-          if (isValid) {
-            return {
-              id: '1',
-              email: adminEmail,
-              name: 'Admin',
-            };
-          }
-        }
+          // Compare password using the model method
+          const isValid = await user.comparePassword(credentials.password as string);
 
-        return null;
+          if (!isValid) {
+            return null;
+          }
+
+          // Update last login
+          await AdminUser.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
+          return null;
+        }
       },
     }),
   ],
@@ -60,12 +58,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        (session.user as any).role = token.role;
       }
       return session;
     },
