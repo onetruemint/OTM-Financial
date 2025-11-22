@@ -1,11 +1,32 @@
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import PostCard from '@/components/PostCard';
 import Pagination from '@/components/Pagination';
 import dbConnect from '@/lib/mongodb';
 import { Post, Category } from '@/models';
 import { IPost, ICategory } from '@/types';
+import { generateListMetadata } from '@/lib/seo';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  await dbConnect();
+  const category = await Category.findOne({ slug }).lean();
+
+  if (!category) {
+    return { title: 'Category Not Found' };
+  }
+
+  const categoryData = JSON.parse(JSON.stringify(category)) as ICategory;
+
+  return generateListMetadata({
+    title: `${categoryData.name} Articles`,
+    description: categoryData.description || `Browse all articles in the ${categoryData.name} category. Find tips, guides, and insights about ${categoryData.name.toLowerCase()}.`,
+    path: `/category/${slug}`,
+  });
+}
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -71,6 +92,12 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <Breadcrumbs
+        items={[
+          { label: 'Categories', href: '/categories' },
+          { label: category.name },
+        ]}
+      />
       <div className="mb-8">
         <div
           className={`inline-block px-4 py-2 rounded-full text-black font-medium ${
