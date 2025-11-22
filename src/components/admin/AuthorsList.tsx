@@ -40,7 +40,7 @@ export default function AuthorsList({ initialAuthors }: AuthorsListProps) {
 
     try {
       // Confirm any pending image upload first
-      let finalFormData = { ...formData };
+      const finalFormData = { ...formData };
       if (imageUploadRef.current) {
         const uploadResult = await imageUploadRef.current.confirmPending();
         if (!uploadResult.success) {
@@ -182,10 +182,10 @@ export default function AuthorsList({ initialAuthors }: AuthorsListProps) {
           {authors.map((author) => (
             <div key={author._id} className="bg-mint rounded-xl p-4">
               <div className="flex items-start gap-4">
-                {(author as any).avatar ? (
+                {author.avatar ? (
                   <div className="relative w-12 h-12 rounded-full overflow-hidden">
                     <Image
-                      src={(author as any).avatar}
+                      src={author.avatar}
                       alt={author.name}
                       fill
                       className="object-cover"

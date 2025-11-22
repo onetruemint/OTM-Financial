@@ -16,7 +16,7 @@ export interface IAdminUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-type AdminUserModel = Model<IAdminUserDocument, {}, IAdminUserMethods>;
+type AdminUserModel = Model<IAdminUserDocument, Record<string, never>, IAdminUserMethods>;
 
 const AdminUserSchema = new Schema<IAdminUserDocument, AdminUserModel, IAdminUserMethods>(
   {

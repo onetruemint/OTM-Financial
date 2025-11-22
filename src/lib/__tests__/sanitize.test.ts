@@ -1,8 +1,8 @@
 // Mock isomorphic-dompurify
 jest.mock('isomorphic-dompurify', () => ({
-  sanitize: jest.fn((html: string, options: any) => {
+  sanitize: jest.fn((html: string) => {
     // Simple mock that removes script tags and event handlers
-    let result = html
+    const result = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
       .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')

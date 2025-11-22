@@ -1,8 +1,5 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import * as dotenv from 'dotenv';
-import { spawn } from 'child_process';
-import { join } from 'path';
 
 // Mock dependencies before importing the module
 jest.mock('mongoose');

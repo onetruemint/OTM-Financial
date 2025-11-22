@@ -1,6 +1,6 @@
 // Mock dependencies before importing the module
-const mockConnect = jest.fn();
-const mockDisconnect = jest.fn();
+const seedMockConnect = jest.fn();
+const seedMockDisconnect = jest.fn();
 const mockDeleteMany = jest.fn();
 const mockCreate = jest.fn();
 
@@ -14,8 +14,8 @@ jest.mock('mongoose', () => {
   (MockSchema as any).Types = { ObjectId: 'ObjectId' };
 
   return {
-    connect: mockConnect,
-    disconnect: mockDisconnect,
+    connect: seedMockConnect,
+    disconnect: seedMockDisconnect,
     model: jest.fn(() => mockModel),
     models: {},
     Schema: MockSchema,
@@ -47,8 +47,8 @@ describe('seed.ts', () => {
     processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);
 
     // Setup default mock returns
-    mockConnect.mockResolvedValue(undefined);
-    mockDisconnect.mockResolvedValue(undefined);
+    seedMockConnect.mockResolvedValue(undefined);
+    seedMockDisconnect.mockResolvedValue(undefined);
     mockDeleteMany.mockResolvedValue({ deletedCount: 0 });
     mockCreate.mockImplementation((data) => {
       if (Array.isArray(data)) {
@@ -101,7 +101,7 @@ describe('seed.ts', () => {
       });
 
       // Verify mongoose.connect was called
-      expect(mockConnect).toHaveBeenCalledWith('mongodb://localhost:27017/test');
+      expect(seedMockConnect).toHaveBeenCalledWith('mongodb://localhost:27017/test');
     });
 
     it('should delete existing data', async () => {
@@ -130,7 +130,7 @@ describe('seed.ts', () => {
         await new Promise(resolve => setImmediate(resolve));
       });
 
-      expect(mockDisconnect).toHaveBeenCalled();
+      expect(seedMockDisconnect).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 
@@ -158,7 +158,7 @@ describe('seed.ts', () => {
     });
 
     it('should handle connection errors', async () => {
-      mockConnect.mockRejectedValue(new Error('Connection failed'));
+      seedMockConnect.mockRejectedValue(new Error('Connection failed'));
 
       await jest.isolateModulesAsync(async () => {
         await import('../seed');
