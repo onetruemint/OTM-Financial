@@ -1,4 +1,4 @@
-import { calculateReadingTime, formatReadingTime, extractHeadings, slugify } from '../utils';
+import { calculateReadingTime, formatReadingTime, extractHeadings, addHeadingIds, slugify } from '../utils';
 
 describe('calculateReadingTime', () => {
   it('should return 1 minute for short content', () => {
@@ -45,11 +45,16 @@ describe('extractHeadings', () => {
     expect(headings[1]).toEqual({ id: 'second', text: 'Second', level: 3 });
   });
 
-  it('should generate id from text (note: id attribute extraction has regex issue)', () => {
+  it('should extract existing id attribute', () => {
     const content = '<h2 id="custom-id">Title</h2>';
     const headings = extractHeadings(content);
-    // The regex doesn't capture existing id attributes correctly
-    expect(headings[0].id).toBe('title');
+    expect(headings[0].id).toBe('custom-id');
+  });
+
+  it('should extract id with single quotes', () => {
+    const content = "<h2 id='single-quote'>Title</h2>";
+    const headings = extractHeadings(content);
+    expect(headings[0].id).toBe('single-quote');
   });
 
   it('should generate slug from text when no id', () => {
@@ -67,6 +72,78 @@ describe('extractHeadings', () => {
     const content = '<h2>One</h2><h2>Two</h2><h2>Three</h2>';
     const headings = extractHeadings(content);
     expect(headings).toHaveLength(3);
+  });
+
+  it('should extract h4, h5, h6 headings', () => {
+    const content = '<h4>Four</h4><h5>Five</h5><h6>Six</h6>';
+    const headings = extractHeadings(content);
+    expect(headings).toHaveLength(3);
+    expect(headings[0].level).toBe(4);
+    expect(headings[1].level).toBe(5);
+    expect(headings[2].level).toBe(6);
+  });
+
+  it('should trim whitespace from heading text', () => {
+    const content = '<h2>  Spaced Title  </h2>';
+    const headings = extractHeadings(content);
+    expect(headings[0].text).toBe('Spaced Title');
+  });
+
+  it('should handle headings with classes', () => {
+    const content = '<h2 class="title" id="my-id">Title</h2>';
+    const headings = extractHeadings(content);
+    expect(headings[0].id).toBe('my-id');
+  });
+});
+
+describe('addHeadingIds', () => {
+  it('should add id to headings without id', () => {
+    const content = '<h2>My Title</h2>';
+    const result = addHeadingIds(content);
+    expect(result).toBe('<h2 id="my-title">My Title</h2>');
+  });
+
+  it('should preserve existing ids', () => {
+    const content = '<h2 id="existing">Title</h2>';
+    const result = addHeadingIds(content);
+    expect(result).toBe('<h2 id="existing">Title</h2>');
+  });
+
+  it('should handle multiple headings', () => {
+    const content = '<h2>First</h2><h3>Second</h3>';
+    const result = addHeadingIds(content);
+    expect(result).toContain('id="first"');
+    expect(result).toContain('id="second"');
+  });
+
+  it('should ensure unique ids for duplicate headings', () => {
+    const content = '<h2>Title</h2><h2>Title</h2><h2>Title</h2>';
+    const result = addHeadingIds(content);
+    expect(result).toContain('id="title"');
+    expect(result).toContain('id="title-1"');
+    expect(result).toContain('id="title-2"');
+  });
+
+  it('should preserve other attributes', () => {
+    const content = '<h2 class="heading">Title</h2>';
+    const result = addHeadingIds(content);
+    expect(result).toBe('<h2 class="heading" id="title">Title</h2>');
+  });
+
+  it('should handle all heading levels', () => {
+    const content = '<h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>';
+    const result = addHeadingIds(content);
+    expect(result).toContain('<h2 id="two">');
+    expect(result).toContain('<h3 id="three">');
+    expect(result).toContain('<h4 id="four">');
+    expect(result).toContain('<h5 id="five">');
+    expect(result).toContain('<h6 id="six">');
+  });
+
+  it('should not modify non-heading content', () => {
+    const content = '<p>Paragraph</p><h2>Heading</h2><p>More text</p>';
+    const result = addHeadingIds(content);
+    expect(result).toBe('<p>Paragraph</p><h2 id="heading">Heading</h2><p>More text</p>');
   });
 });
 
