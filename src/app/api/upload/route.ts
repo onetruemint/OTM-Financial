@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
+import { auth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication for uploads
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const folder = formData.get('folder') as string || 'otm-financial';

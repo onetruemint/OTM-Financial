@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import { Tag } from '@/models';
 import { auth } from '@/lib/auth';
 import slugify from 'slugify';
+import { createTagSchema, validateBody } from '@/lib/validations';
 
 // GET all tags
 export async function GET() {
@@ -32,7 +33,14 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { name } = body;
+
+    // Validate input
+    const validation = validateBody(createTagSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { name } = validation.data;
 
     const slug = slugify(name, { lower: true, strict: true });
 

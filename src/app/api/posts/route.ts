@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import { Post, Category, Tag, Author } from '@/models';
 import { auth } from '@/lib/auth';
 import slugify from 'slugify';
+import { sanitizeHtml } from '@/lib/sanitize';
+import { createPostSchema, validateBody } from '@/lib/validations';
 
 // GET all posts (with filters)
 export async function GET(request: NextRequest) {
@@ -20,7 +22,13 @@ export async function GET(request: NextRequest) {
     const query: Record<string, unknown> = {};
 
     // Only show published posts for public requests
-    if (published !== 'all') {
+    // Require authentication to view unpublished posts
+    if (published === 'all') {
+      const session = await auth();
+      if (!session) {
+        return NextResponse.json({ error: 'Unauthorized to view unpublished posts' }, { status: 401 });
+      }
+    } else {
       query.published = true;
     }
 
@@ -84,7 +92,17 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { title, excerpt, content, featuredImage, author, category, tags, published } = body;
+
+    // Validate input
+    const validation = validateBody(createPostSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { title, excerpt, content, featuredImage, author, category, tags, published } = validation.data;
+
+    // Sanitize HTML content to prevent XSS
+    const sanitizedContent = sanitizeHtml(content);
 
     const slug = slugify(title, { lower: true, strict: true });
 
@@ -101,8 +119,8 @@ export async function POST(request: NextRequest) {
       title,
       slug,
       excerpt,
-      content,
-      featuredImage,
+      content: sanitizedContent,
+      featuredImage: featuredImage || '',
       author,
       category,
       tags: tags || [],
