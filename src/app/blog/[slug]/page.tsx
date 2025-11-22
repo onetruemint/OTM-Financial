@@ -2,10 +2,18 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, User, Tag as TagIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { Metadata } from 'next';
 import dbConnect from '@/lib/mongodb';
 import { Post } from '@/models';
 import { IPost } from '@/types';
 import LikeButton from '@/components/LikeButton';
+import { ArticleJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
+import { generateArticleMetadata, siteConfig } from '@/lib/seo';
+import ReadingTime from '@/components/ReadingTime';
+import TableOfContents from '@/components/TableOfContents';
+import RelatedPosts from '@/components/RelatedPosts';
+import SocialShare from '@/components/SocialShare';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +31,56 @@ async function getPost(slug: string): Promise<IPost | null> {
     .lean();
 
   return post ? JSON.parse(JSON.stringify(post)) : null;
+}
+
+async function getRelatedPosts(post: IPost): Promise<IPost[]> {
+  await dbConnect();
+
+  const categoryId = typeof post.category === 'object' ? post.category._id : post.category;
+  const tagIds = post.tags?.map(tag => typeof tag === 'object' ? tag._id : tag) || [];
+
+  const relatedPosts = await Post.find({
+    _id: { $ne: post._id },
+    published: true,
+    $or: [
+      { category: categoryId },
+      { tags: { $in: tagIds } },
+    ],
+  })
+    .populate('author', 'name avatar')
+    .populate('category', 'name slug color')
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .lean();
+
+  return JSON.parse(JSON.stringify(relatedPosts));
+}
+
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
+
+  if (!post) {
+    return {
+      title: 'Post Not Found',
+    };
+  }
+
+  const author = typeof post.author === 'object' ? post.author : null;
+  const tags = post.tags?.filter((tag) => typeof tag === 'object').map((tag) =>
+    typeof tag === 'object' ? tag.name : ''
+  ) || [];
+
+  return generateArticleMetadata({
+    title: post.title,
+    description: post.excerpt,
+    slug: post.slug,
+    publishedTime: new Date(post.createdAt).toISOString(),
+    modifiedTime: post.updatedAt ? new Date(post.updatedAt).toISOString() : undefined,
+    authors: author ? [author.name] : undefined,
+    tags,
+    image: post.featuredImage,
+  });
 }
 
 const colorMap: Record<string, string> = {
@@ -46,11 +104,38 @@ export default async function PostPage({ params }: PostPageProps) {
   const author = typeof post.author === 'object' ? post.author : null;
   const tags = post.tags?.filter((tag) => typeof tag === 'object') || [];
   const categoryColor = category?.color || 'blue';
+  const relatedPosts = await getRelatedPosts(post);
+  const postUrl = `${siteConfig.url}/blog/${post.slug}`;
 
   return (
-    <article className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
-      <header className="mb-8">
+    <>
+      <ArticleJsonLd
+        title={post.title}
+        description={post.excerpt}
+        url={`${siteConfig.url}/blog/${post.slug}`}
+        imageUrl={post.featuredImage}
+        datePublished={new Date(post.createdAt).toISOString()}
+        dateModified={post.updatedAt ? new Date(post.updatedAt).toISOString() : undefined}
+        authorName={author?.name || 'OneTrueMint'}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: siteConfig.url },
+          { name: 'Blog', url: `${siteConfig.url}/blog` },
+          { name: post.title, url: `${siteConfig.url}/blog/${post.slug}` },
+        ]}
+      />
+      <article className="max-w-4xl mx-auto px-4 py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'Blog', href: '/blog' },
+            { label: post.title },
+          ]}
+        />
+
+        {/* Header */}
+        <header className="mb-8">
         {category && (
           <Link
             href={`/category/${category.slug}`}
@@ -65,7 +150,10 @@ export default async function PostPage({ params }: PostPageProps) {
         <p className="text-lg text-black/70 mb-6">{post.excerpt}</p>
         <div className="flex flex-wrap items-center gap-4 text-sm text-black/60">
           {author && (
-            <span className="flex items-center gap-2">
+            <Link
+              href={`/author/${author._id}`}
+              className="flex items-center gap-2 hover:text-dark-blue transition-colors"
+            >
               {author.avatar ? (
                 <img
                   src={author.avatar}
@@ -76,12 +164,13 @@ export default async function PostPage({ params }: PostPageProps) {
                 <User size={16} />
               )}
               {author.name}
-            </span>
+            </Link>
           )}
           <span className="flex items-center gap-1">
             <Calendar size={16} />
             {format(new Date(post.createdAt), 'MMMM d, yyyy')}
           </span>
+          <ReadingTime content={post.content} />
         </div>
       </header>
 
@@ -95,6 +184,9 @@ export default async function PostPage({ params }: PostPageProps) {
           />
         </div>
       )}
+
+      {/* Table of Contents */}
+      <TableOfContents content={post.content} />
 
       {/* Content */}
       <div
@@ -120,10 +212,13 @@ export default async function PostPage({ params }: PostPageProps) {
         </div>
       )}
 
-      {/* Like Button */}
-      <div className="flex items-center justify-between border-t border-mint pt-6">
-        <span className="text-black/60">Did you enjoy this post?</span>
-        <LikeButton slug={post.slug} initialLikes={post.likes} />
+      {/* Like Button and Social Share */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-mint pt-6">
+        <div className="flex items-center gap-4">
+          <span className="text-black/60">Did you enjoy this post?</span>
+          <LikeButton slug={post.slug} initialLikes={post.likes} />
+        </div>
+        <SocialShare url={postUrl} title={post.title} description={post.excerpt} />
       </div>
 
       {/* Author Bio */}
@@ -148,6 +243,10 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
         </div>
       )}
-    </article>
+
+      {/* Related Posts */}
+      <RelatedPosts posts={relatedPosts} />
+      </article>
+    </>
   );
 }

@@ -1,11 +1,32 @@
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import PostCard from '@/components/PostCard';
 import Pagination from '@/components/Pagination';
 import dbConnect from '@/lib/mongodb';
 import { Post, Tag } from '@/models';
 import { IPost, ITag } from '@/types';
+import { generateListMetadata } from '@/lib/seo';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  await dbConnect();
+  const tag = await Tag.findOne({ slug }).lean();
+
+  if (!tag) {
+    return { title: 'Tag Not Found' };
+  }
+
+  const tagData = JSON.parse(JSON.stringify(tag)) as ITag;
+
+  return generateListMetadata({
+    title: `Posts Tagged "${tagData.name}"`,
+    description: `Browse all articles tagged with ${tagData.name}. Find related content about ${tagData.name.toLowerCase()}.`,
+    path: `/tag/${slug}`,
+  });
+}
 
 interface TagPageProps {
   params: Promise<{ slug: string }>;
@@ -62,6 +83,12 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <Breadcrumbs
+        items={[
+          { label: 'Blog', href: '/blog' },
+          { label: `#${tag.name}` },
+        ]}
+      />
       <div className="mb-8">
         <div className="inline-block px-4 py-2 rounded-full text-black font-medium bg-mint mb-4">
           #{tag.name}
