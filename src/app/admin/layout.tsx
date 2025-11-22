@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export default async function AdminLayout({
@@ -9,21 +7,16 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const headersList = await headers();
-  const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || '';
+  const pathname = headersList.get('x-pathname') || '';
 
-  // Skip auth check for login page
-  const isLoginPage = pathname.includes('/admin/login');
+  // Login page has its own layout (no sidebar)
+  const isLoginPage = pathname === '/admin/login';
 
   if (isLoginPage) {
     return <>{children}</>;
   }
 
-  const session = await auth();
-
-  if (!session) {
-    redirect('/admin/login');
-  }
-
+  // Auth is handled by proxy/middleware, so if we reach here we're authenticated
   return (
     <div className="flex min-h-screen">
       <AdminSidebar />
