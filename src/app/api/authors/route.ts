@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { Author } from '@/models';
 import { auth } from '@/lib/auth';
+import { createAuthorSchema, validateBody } from '@/lib/validations';
 
 // GET all authors
 export async function GET() {
@@ -31,7 +32,14 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { name, email, bio, avatar } = body;
+
+    // Validate input
+    const validation = validateBody(createAuthorSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { name, email, bio, avatar } = validation.data;
 
     const existingAuthor = await Author.findOne({ email });
     if (existingAuthor) {
@@ -44,8 +52,8 @@ export async function POST(request: NextRequest) {
     const author = await Author.create({
       name,
       email,
-      bio,
-      avatar,
+      bio: bio || '',
+      avatar: avatar || '',
     });
 
     return NextResponse.json(author, { status: 201 });

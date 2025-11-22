@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { Post } from '@/models';
+import { escapeRegex } from '@/lib/sanitize';
 
 // GET search posts
 export async function GET(request: NextRequest) {
@@ -19,7 +20,8 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Use regex for partial matching since text search requires exact words
-    const searchRegex = new RegExp(query, 'i');
+    // Escape special characters to prevent ReDoS attacks
+    const searchRegex = new RegExp(escapeRegex(query), 'i');
 
     const posts = await Post.find({
       published: true,

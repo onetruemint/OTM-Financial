@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import { Category } from '@/models';
 import { auth } from '@/lib/auth';
 import slugify from 'slugify';
+import { createCategorySchema, validateBody } from '@/lib/validations';
 
 // GET all categories
 export async function GET() {
@@ -32,7 +33,14 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { name, description, color } = body;
+
+    // Validate input
+    const validation = validateBody(createCategorySchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { name, description, color } = validation.data;
 
     const slug = slugify(name, { lower: true, strict: true });
 
