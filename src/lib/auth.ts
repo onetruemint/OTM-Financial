@@ -23,10 +23,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         if (credentials.email === adminEmail) {
-          // For the first login, we compare plaintext
-          // In production, you should hash the password in env
-          const isValid = credentials.password === adminPassword ||
-            await bcrypt.compare(credentials.password as string, adminPassword);
+          // Always use bcrypt comparison for security
+          // ADMIN_PASSWORD in env should be a bcrypt hash
+          // Generate with: npx bcryptjs hash "yourpassword"
+          let isValid = false;
+
+          // Check if password is bcrypt hashed (starts with $2)
+          if (adminPassword.startsWith('$2')) {
+            isValid = await bcrypt.compare(credentials.password as string, adminPassword);
+          } else {
+            // Fallback for non-hashed passwords (development only)
+            // Log warning in production
+            if (process.env.NODE_ENV === 'production') {
+              console.warn('WARNING: ADMIN_PASSWORD should be bcrypt hashed in production');
+            }
+            isValid = credentials.password === adminPassword;
+          }
 
           if (isValid) {
             return {

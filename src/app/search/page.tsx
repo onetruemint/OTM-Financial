@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import { Post } from '@/models';
 import { IPost } from '@/types';
 import { Search } from 'lucide-react';
+import { escapeRegex } from '@/lib/sanitize';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,8 @@ async function searchPosts(query: string, page: number = 1, limit: number = 9) {
   await dbConnect();
 
   const skip = (page - 1) * limit;
-  const searchRegex = new RegExp(query, 'i');
+  // Escape special characters to prevent ReDoS attacks
+  const searchRegex = new RegExp(escapeRegex(query), 'i');
 
   const filter = {
     published: true,
