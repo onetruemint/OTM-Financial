@@ -24,7 +24,12 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
 
   if (featured) {
     return (
-      <article className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-mint">
+      <article className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-mint group">
+        <Link
+          href={`/blog/${post.slug}`}
+          className="absolute inset-0 z-0"
+          aria-label={`Read ${post.title}`}
+        />
         <div className="md:flex">
           {post.featuredImage && (
             <div className="md:w-1/2">
@@ -39,16 +44,14 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
             {category && (
               <Link
                 href={`/category/${category.slug}`}
-                className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-black ${colorMap[categoryColor]} hover:opacity-80 transition-opacity`}
+                className={`relative z-10 inline-block px-3 py-1 rounded-full text-sm font-medium text-black ${colorMap[categoryColor]} hover:opacity-80 transition-opacity`}
               >
                 {category.name}
               </Link>
             )}
-            <Link href={`/blog/${post.slug}`}>
-              <h2 className="text-2xl font-bold text-black mt-3 mb-2 hover:text-dark-purple transition-colors">
-                {post.title}
-              </h2>
-            </Link>
+            <h2 className="text-2xl font-bold text-black mt-3 mb-2 group-hover:text-dark-purple transition-colors">
+              {post.title}
+            </h2>
             <p className="text-black/70 mb-4">{post.excerpt}</p>
             <div className="flex items-center justify-between text-sm text-black/60">
               <div className="flex items-center gap-4">
@@ -75,7 +78,12 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
   }
 
   return (
-    <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-mint">
+    <article className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-mint group cursor-pointer">
+      <Link
+        href={`/blog/${post.slug}`}
+        className="absolute inset-0 z-0"
+        aria-label={`Read ${post.title}`}
+      />
       {post.featuredImage && (
         <img
           src={post.featuredImage}
@@ -87,16 +95,14 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         {category && (
           <Link
             href={`/category/${category.slug}`}
-            className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-black ${colorMap[categoryColor]} hover:opacity-80 transition-opacity`}
+            className={`relative z-10 inline-block px-3 py-1 rounded-full text-xs font-medium text-black ${colorMap[categoryColor]} hover:opacity-80 transition-opacity`}
           >
             {category.name}
           </Link>
         )}
-        <Link href={`/blog/${post.slug}`}>
-          <h3 className="text-lg font-bold text-black mt-2 mb-2 hover:text-dark-purple transition-colors line-clamp-2">
-            {post.title}
-          </h3>
-        </Link>
+        <h3 className="text-lg font-bold text-black mt-2 mb-2 group-hover:text-dark-purple transition-colors line-clamp-2">
+          {post.title}
+        </h3>
         <p className="text-black/70 text-sm mb-3 line-clamp-2">{post.excerpt}</p>
         <div className="flex items-center justify-between text-xs text-black/60">
           <span className="flex items-center gap-1">

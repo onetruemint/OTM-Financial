@@ -50,7 +50,7 @@ export function addHeadingIds(content: string): string {
     }
 
     // Generate id from text
-    let id = text.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const id = text.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
 
     // Ensure unique id
     let uniqueId = id;

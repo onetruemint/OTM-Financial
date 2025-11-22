@@ -3,6 +3,18 @@ import dbConnect from '@/lib/mongodb';
 import { Post } from '@/models';
 import { auth } from '@/lib/auth';
 import slugify from 'slugify';
+import cloudinary from '@/lib/cloudinary';
+
+// Extract public_id from Cloudinary URL
+function extractPublicId(url: string): string | null {
+  if (!url || !url.includes('cloudinary.com')) {
+    return null;
+  }
+
+  // URL format: https://res.cloudinary.com/{cloud}/image/upload/v{version}/{public_id}.{ext}
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
+  return match ? match[1] : null;
+}
 
 // GET single post by slug
 export async function GET(
@@ -118,6 +130,19 @@ export async function DELETE(
     const post = await Post.findOneAndDelete({ slug });
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Delete featured image from Cloudinary if it exists
+    if (post.featuredImage) {
+      const publicId = extractPublicId(post.featuredImage);
+      if (publicId) {
+        try {
+          await cloudinary.uploader.destroy(publicId);
+        } catch (cloudinaryError) {
+          // Log but don't fail the request if image deletion fails
+          console.error('Error deleting image from Cloudinary:', cloudinaryError);
+        }
+      }
     }
 
     return NextResponse.json({ message: 'Post deleted successfully' });
