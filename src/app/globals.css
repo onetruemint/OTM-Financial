@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --white: #f5f5f5;
@@ -66,6 +67,88 @@ body {
 /* Smooth transitions - only for interactive elements */
 a, button, [role="button"] {
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Prose typography customization */
+.prose {
+  --tw-prose-body: var(--black);
+  --tw-prose-headings: var(--black);
+  --tw-prose-links: var(--dark-blue);
+  --tw-prose-bold: var(--black);
+  --tw-prose-quotes: var(--black);
+  --tw-prose-code: var(--black);
+  --tw-prose-hr: var(--mint);
+  --tw-prose-th-borders: var(--mint);
+  --tw-prose-td-borders: var(--mint);
+}
+
+.prose h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--black);
+}
+
+.prose h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--black);
+}
+
+.prose h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--black);
+}
+
+.prose h5, .prose h6 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--black);
+}
+
+.prose a {
+  color: var(--dark-blue);
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: var(--dark-purple);
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--dark-purple);
+  padding-left: 1rem;
+  font-style: italic;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+.prose code {
+  background: var(--mint);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.prose pre {
+  background: var(--black);
+  color: var(--white);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
 }
 
 /* Selection styling */
