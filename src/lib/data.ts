@@ -8,6 +8,7 @@ export interface AuthorData {
   name: string;
   email?: string;
   bio?: string;
+  avatar?: string;
 }
 
 export interface CategoryData {

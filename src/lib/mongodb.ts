@@ -9,7 +9,7 @@ declare global {
   var mongoose: MongooseCache | undefined;
 }
 
-let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
 
 if (!global.mongoose) {
   global.mongoose = cached;
@@ -53,14 +53,15 @@ async function dbConnect(): Promise<typeof mongoose> {
 
   try {
     cached.conn = await cached.promise;
-  } catch (e: any) {
+  } catch (e: unknown) {
     cached.promise = null;
 
     // Provide helpful error messages
-    if (e?.code === 'ENOTFOUND' || e?.message?.includes('ENOTFOUND')) {
+    const error = e as { code?: string; message?: string; stack?: string };
+    if (error?.code === 'ENOTFOUND' || error?.message?.includes('ENOTFOUND')) {
       const errorMsg = new Error(
         `DNS resolution failed for MongoDB connection.\n` +
-        `Error: ${e.message}\n\n` +
+        `Error: ${error.message}\n\n` +
         `Possible solutions:\n` +
         `1. Verify your MONGODB_URI in .env.local has the correct cluster hostname\n` +
         `2. Check your internet connection\n` +
@@ -68,7 +69,7 @@ async function dbConnect(): Promise<typeof mongoose> {
         `4. Verify your MongoDB Atlas cluster is running and accessible\n` +
         `5. Check if your IP address is whitelisted in MongoDB Atlas Network Access settings`
       );
-      errorMsg.stack = e.stack;
+      errorMsg.stack = error.stack;
       throw errorMsg;
     }
 

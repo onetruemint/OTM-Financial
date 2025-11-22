@@ -3,6 +3,24 @@ import Credentials from 'next-auth/providers/credentials';
 import dbConnect from '@/lib/mongodb';
 import { AdminUser } from '@/models';
 
+declare module 'next-auth' {
+  interface User {
+    role?: string;
+  }
+  interface Session {
+    user: {
+      id: string;
+      email?: string | null;
+      name?: string | null;
+      role?: string;
+    };
+  }
+  interface JWT {
+    id?: string;
+    role?: string;
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -58,14 +76,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as any).role = token.role;
+        session.user.role = token.role as string | undefined;
       }
       return session;
     },

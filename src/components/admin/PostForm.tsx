@@ -56,7 +56,7 @@ export default function PostForm({
 
     try {
       // Confirm any pending image upload first
-      let finalFormData = { ...formData };
+      const finalFormData = { ...formData };
       if (imageUploadRef.current) {
         const uploadResult = await imageUploadRef.current.confirmPending();
         if (!uploadResult.success) {
